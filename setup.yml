@@ -1,0 +1,74 @@
+---
+- name: "Creating 4 VMs and some python libaries"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+        - vault.yml
+  tasks:
+      - name: "installing boto"
+        pip:
+           name: "boto"
+           executable: pip3
+      - name: "installing boto3"
+        pip:
+           name: "boto3"
+           executable: pip3
+      - name: "creating security group"
+        ec2_group:
+           aws_access_key: "{{ ak }}"
+           aws_secret_key: "{{ sak }}"
+           name: 'launch-wizard-1'
+           description: 'sg with rule descriptions'
+           vpc_id: 'vpc-2e55ea54'
+           tags:
+               Name: "task12-sg"
+           region: "us-east-1"
+           rules:
+             - proto: tcp
+               from_port: 22
+               to_port: 22
+               cidr_ip: 0.0.0.0/0
+               rule_desc: allow all on port 22 for ssh
+             - proto: tcp
+               cidr_ip: 0.0.0.0/0
+               ports:
+                 - 80
+               rule_desc: allow all on port 80 for webserver
+             - proto: tcp
+               cidr_ip: 0.0.0.0/0
+               ports:
+                 - 2629
+               rule_desc: allow all on port 2629 for loadbalancer
+           rules_egress:
+             - proto: all
+               from_port: 0
+               to_port: 0
+               cidr_ip: 0.0.0.0/0
+      - name: "Creating LoadBalancer"
+        ec2:
+                count: 1
+                image: "ami-0022f774911c1d690"
+                instance_type: t2.micro
+                region: "us-east-1"
+                wait: yes
+                instance_tags:
+                        Name: Ansible_LoadBalancer
+                group: "launch-wizard-1"
+                key_name: "Ansible_Key_Pair"
+                state: present
+                aws_access_key: "{{ ak }}"
+                aws_secret_key: "{{ sak }}"
+      - name: "webserver"
+        ec2:
+                count: 3
+                image: "ami-0022f774911c1d690"
+                instance_type: t2.micro
+                region: "us-east-1"
+                wait: yes
+                instance_tags:
+                        Name: Ansible_WebServer
+                group: "launch-wizard-1"
+                key_name: "Ansible_Key_Pair"
+                state: present
+                aws_access_key: "{{ ak }}"
+                aws_secret_key: "{{ sak }}"
