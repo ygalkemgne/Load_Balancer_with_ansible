@@ -2,6 +2,9 @@
 - name: "Creating 4 VMs and some python libaries"
   hosts: localhost
   gather_facts: false
+  vars: 
+    aws_access_key: "{{ ak }}"
+    aws_secret_key: "{{ sak }}"
   vars_files:
         - vault.yml
   tasks:
@@ -15,13 +18,11 @@
            executable: pip3
       - name: "creating security group"
         ec2_group:
-           aws_access_key: "{{ ak }}"
-           aws_secret_key: "{{ sak }}"
            name: 'launch-wizard-1'
            description: 'sg with rule descriptions'
            vpc_id: 'vpc-2e55ea54'
            tags:
-               Name: "task12-sg"
+               Name: "security_group_1"
            region: "us-east-1"
            rules:
              - proto: tcp
@@ -54,10 +55,9 @@
                 instance_tags:
                         Name: Ansible_LoadBalancer
                 group: "launch-wizard-1"
-                key_name: "Ansible_Key_Pair"
+                key_name: "xxxxxxxxxx" #add your keypair or create a new one
                 state: present
-                aws_access_key: "{{ ak }}"
-                aws_secret_key: "{{ sak }}"
+               
       - name: "webserver"
         ec2:
                 count: 3
@@ -68,7 +68,6 @@
                 instance_tags:
                         Name: Ansible_WebServer
                 group: "launch-wizard-1"
-                key_name: "Ansible_Key_Pair"
+                key_name: "xxxxxxxxxx" #add your keypair or create a new one
                 state: present
-                aws_access_key: "{{ ak }}"
-                aws_secret_key: "{{ sak }}"
+                
